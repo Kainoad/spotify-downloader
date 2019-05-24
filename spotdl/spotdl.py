@@ -17,8 +17,11 @@ from spotdl import downloader
 
 def debug_sys_info():
     log.debug("Python version: {}".format(sys.version))
+    sys.stdout.flush()
     log.debug("Platform: {}".format(platform.platform()))
+    sys.stdout.flush()
     log.debug(pprint.pformat(const.args.__dict__))
+    sys.stdout.flush()
 
 
 def match_args():
@@ -67,6 +70,7 @@ def main():
 
     except KeyboardInterrupt as e:
         log.exception(e)
+        sys.stdout.flush()
         sys.exit(3)
 
 
