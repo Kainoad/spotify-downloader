@@ -14,7 +14,9 @@ try:
     from slugify import SLUG_OK, slugify
 except ImportError:
     log.error("Oops! `unicode-slugify` was not found.")
+    sys.stdout.flush()
     log.info("Please remove any other slugify library and install `unicode-slugify`")
+    sys.stdout.flush()
     sys.exit(5)
 
 formats = {
@@ -38,6 +40,7 @@ def input_link(links):
     while True:
         try:
             log.info("Choose your number:")
+            sys.stdout.flush()
             the_chosen_one = int(input("> "))
             if 1 <= the_chosen_one <= len(links):
                 return links[the_chosen_one - 1]
@@ -45,8 +48,10 @@ def input_link(links):
                 return None
             else:
                 log.warning("Choose a valid number!")
+                sys.stdout.flush()
         except ValueError:
             log.warning("Choose a valid number!")
+            sys.stdout.flush()
 
 
 def trim_song(tracks_file):
