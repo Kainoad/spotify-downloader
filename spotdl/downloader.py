@@ -1,6 +1,7 @@
 import spotipy
 import urllib
 import os
+import sys
 import time
 from logzero import logger as log
 
@@ -27,6 +28,7 @@ class CheckExists:
             "Cleaning any temp files and checking "
             'if "{}" already exists'.format(self.filename)
         )
+        sys.stdout.flush()
         songs = os.listdir(self.filepath)
         self._remove_temp_files(songs)
 
@@ -37,6 +39,7 @@ class CheckExists:
                     return False
 
                 log.warning('"{}" already exists'.format(song))
+                sys.stdout.flush()
                 if const.args.overwrite == "prompt":
                     return self._prompt_song(song)
                 elif const.args.overwrite == "force":
@@ -58,6 +61,7 @@ class CheckExists:
             os.path.join(self.filepath, song), self.meta_tags
         )
         log.debug("Checking if it is already tagged correctly? {}", already_tagged)
+        sys.stdout.flush()
         if not already_tagged:
             os.remove(os.path.join(self.filepath, song))
             return False
@@ -68,6 +72,7 @@ class CheckExists:
         log.info(
             '"{}" has already been downloaded. ' "Re-download? (y/N): ".format(song)
         )
+        sys.stdout.flush()
         prompt = input("> ")
         if prompt.lower() == "y":
             return self._force_overwrite_song(song)
@@ -77,15 +82,18 @@ class CheckExists:
     def _force_overwrite_song(self, song):
         os.remove(os.path.join(const.args.folder, song))
         log.info('Overwriting "{}"'.format(song))
+        sys.stdout.flush()
         return False
 
     def _skip_song(self, song):
         log.info('Skipping "{}"'.format(song))
+        sys.stdout.flush()
         return True
 
     def _match_filenames(self, song):
         if os.path.splitext(song)[0] == self.filename:
             log.debug('Found an already existing song: "{}"'.format(song))
+            sys.stdout.flush()
             return True
 
         return False
@@ -107,6 +115,7 @@ class Downloader:
         # otherwise "[artist] - [song]"
         youtube_title = youtube_tools.get_youtube_title(self.content, self.number)
         log.info("{} ({})".format(youtube_title, self.content.watchv_url))
+        sys.stdout.flush()
 
         # generate file name of the song to download
         songname = self.refine_songname(self.content.title)
@@ -137,6 +146,7 @@ class Downloader:
             except FileNotFoundError:
                 encoder = "avconv" if const.args.avconv else "ffmpeg"
                 log.warning("Could not find {0}, skip encoding".format(encoder))
+                sys.stdout.flush()
                 output_song = self.unconverted_filename(songname)
 
             if not const.args.no_metadata and self.meta_tags is not None:
@@ -148,10 +158,12 @@ class Downloader:
     def _to_skip(self):
         if self.content is None:
             log.debug("Found no matching video")
+            sys.stdout.flush()
             return True
 
         if const.args.download_only_metadata and self.meta_tags is None:
             log.info("Found no metadata. Skipping the download")
+            sys.stdout.flush()
             return True
 
     def refine_songname(self, songname):
@@ -163,6 +175,7 @@ class Downloader:
                 'Refining songname from "{0}" to "{1}"'.format(
                     songname, refined_songname
                 )
+            sys.stdout.flush()
             )
             if not refined_songname == " - ":
                 songname = refined_songname
@@ -189,6 +202,7 @@ class ListDownloader:
         """ Download all songs from the list. """
         # override file with unique tracks
         log.info("Overriding {} with unique tracks".format(self.tracks_file))
+        sys.stdout.flush()
         self._override_file()
 
         # Remove tracks to skip from tracks list
@@ -196,6 +210,7 @@ class ListDownloader:
             self.tracks = self._filter_tracks_against_skip_file()
 
         log.info(u"Preparing to download {} songs".format(len(self.tracks)))
+        sys.stdout.flush()
         return self._download_list()
 
     def _download_list(self):
@@ -220,6 +235,7 @@ class ListDownloader:
                 self._write_successful(raw_song)
 
             log.debug("Removing downloaded song from tracks file")
+            sys.stdout.flush()
             internals.trim_song(self.tracks_file)
 
         return downloaded_songs
@@ -230,6 +246,7 @@ class ListDownloader:
 
     def _write_successful(self, raw_song):
         log.debug("Adding downloaded song to write successful file")
+        sys.stdout.flush()
         with open(self.write_successful_file, "a") as f:
             f.write("\n" + raw_song)
 
@@ -241,11 +258,14 @@ class ListDownloader:
         with open(self.tracks_file, "a") as f:
             f.write("\n" + raw_song)
         log.exception(exception)
+        sys.stdout.flush()
         log.warning("Failed to download song. Will retry after other songs\n")
+        sys.stdout.flush()
 
     def _filter_tracks_against_skip_file(self):
         skip_tracks = internals.get_unique_tracks(self.skip_file)
         len_before = len(self.tracks)
         tracks = [track for track in self.tracks if track not in skip_tracks]
         log.info("Skipping {} tracks".format(len_before - len(tracks)))
+        sys.stdout.flush()
         return tracks
