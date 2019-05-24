@@ -30,15 +30,19 @@ def embed(music_file, meta_tags):
     embed = EmbedMetadata(music_file, meta_tags)
     if music_file.endswith(".m4a"):
         log.info("Applying metadata")
+        sys.stdout.flush()
         return embed.as_m4a()
     elif music_file.endswith(".mp3"):
         log.info("Applying metadata")
+        sys.stdout.flush()
         return embed.as_mp3()
     elif music_file.endswith(".flac"):
         log.info("Applying metadata")
+        sys.stdout.flush()
         return embed.as_flac()
     else:
         log.warning("Cannot embed metadata into given output extension")
+        sys.stdout.flush()
         return False
 
 
