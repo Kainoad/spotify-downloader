@@ -1,5 +1,6 @@
 import subprocess
 import os
+import sys
 from logzero import logger as log
 
 
@@ -23,8 +24,10 @@ def song(input_song, output_song, folder, avconv=False, trim_silence=False):
 
     if not input_song == output_song:
         log.info("Converting {0} to {1}".format(input_song, output_song.split(".")[-1]))
+        sys.stdout.flush()
     elif input_song.endswith(".m4a"):
         log.info('Correcting container in "{}"'.format(input_song))
+        sys.stdout.flush()
     else:
         return 0
 
@@ -52,6 +55,7 @@ class Converter:
             log.debug(
                 'Input file and output file are going will be same during encoding, will append ".temp" to input file just before starting encoding to avoid conflict'
             )
+            sys.stdout.flush()
             input_song = output_song + ".temp"
             rename_to_temp = True
             delete_original = True
@@ -83,6 +87,7 @@ class Converter:
             os.rename(self.output_file, self.input_file)
 
         log.debug(command)
+        sys.stdout.flush()
         try:
             code = subprocess.call(command)
         except FileNotFoundError:
@@ -92,6 +97,7 @@ class Converter:
 
         if self.delete_original:
             log.debug('Removing original file: "{}"'.format(self.input_file))
+            sys.stdout.flush()
             os.remove(self.input_file)
 
         return code, command
@@ -139,6 +145,7 @@ class Converter:
             os.rename(self.output_file, self.input_file)
 
         log.debug(command)
+        sys.stdout.flush()
         try:
             code = subprocess.call(command)
         except FileNotFoundError:
@@ -148,6 +155,7 @@ class Converter:
 
         if self.delete_original:
             log.debug('Removing original file: "{}"'.format(self.input_file))
+            sys.stdout.flush()
             os.remove(self.input_file)
 
         return code, command
