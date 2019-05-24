@@ -3,6 +3,8 @@ from mutagen.id3 import ID3, TORY, TYER, TPUB, APIC, USLT, COMM
 from mutagen.mp4 import MP4, MP4Cover
 from mutagen.flac import Picture, FLAC
 
+import sys
+
 import urllib.request
 from logzero import logger as log
 
