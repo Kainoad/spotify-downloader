@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import sys
+import msvcrt
 import platform
 import pprint
 import logzero
