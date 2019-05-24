@@ -45,10 +45,12 @@ def generate_metadata(raw_song):
     if internals.is_spotify(raw_song):
         # fetch track information directly if it is spotify link
         log.debug("Fetching metadata for given track URL")
+        sys.stdout.flush()
         meta_tags = spotify.track(raw_song)
     else:
         # otherwise search on spotify and fetch information from first result
         log.debug('Searching for "{}" on Spotify'.format(raw_song))
+        sys.stdout.flush()
         try:
             meta_tags = spotify.search(raw_song, limit=1)["tracks"]["items"][0]
         except IndexError:
@@ -74,6 +76,7 @@ def generate_metadata(raw_song):
     meta_tags[u"total_tracks"] = album["tracks"]["total"]
 
     log.debug("Fetching lyrics")
+    sys.stdout.flush()
 
     try:
         meta_tags["lyrics"] = lyricwikia.get_lyrics(
@@ -92,6 +95,7 @@ def generate_metadata(raw_song):
     del meta_tags["album"]["available_markets"]
 
     log.debug(pprint.pformat(meta_tags))
+    sys.stdout.flush()
     return meta_tags
 
 
@@ -120,8 +124,10 @@ def get_playlists(username):
                         check, playlist["name"], playlist["tracks"]["total"]
                     )
                 )
+                sys.stdout.flush()
                 playlist_url = playlist["external_urls"]["spotify"]
                 log.debug(playlist_url)
+                sys.stdout.flush()
                 links.append(playlist_url)
                 check += 1
         if playlists["next"]:
@@ -139,6 +145,7 @@ def fetch_playlist(playlist):
     except IndexError:
         # Wrong format, in either case
         log.error("The provided playlist URL is not in a recognized format!")
+        sys.stdout.flush()
         sys.exit(10)
     try:
         results = spotify.user_playlist(
@@ -146,7 +153,9 @@ def fetch_playlist(playlist):
         )
     except spotipy.client.SpotifyException:
         log.error("Unable to find playlist")
+        sys.stdout.flush()
         log.info("Make sure the playlist is set to publicly visible and then try again")
+        sys.stdout.flush()
         sys.exit(11)
 
     return results
@@ -217,6 +226,7 @@ def write_all_albums_from_artist(artist_url, text_file=None):
     for album in albums:
         # logging album name
         log.info("Fetching album: " + album["name"])
+        sys.stdout.flush()
         write_album(album_base_url + album["id"], text_file=text_file)
 
 
@@ -232,6 +242,7 @@ def write_album(album_url, text_file=None):
 @must_be_authorized
 def write_tracks(tracks, text_file):
     log.info(u"Writing {0} tracks to {1}".format(tracks["total"], text_file))
+    sys.stdout.flush()
     track_urls = []
     with open(text_file, "a") as file_out:
         while True:
@@ -243,6 +254,7 @@ def write_tracks(tracks, text_file):
                 try:
                     track_url = track["external_urls"]["spotify"]
                     log.debug(track_url)
+                    sys.stdout.flush()
                     file_out.write(track_url + "\n")
                     track_urls.append(track_url)
                 except KeyError:
@@ -251,6 +263,7 @@ def write_tracks(tracks, text_file):
                             track["name"], track["artists"][0]["name"]
                         )
                     )
+                    sys.stdout.flush()
             # 1 page = 50 results
             # check if there are more pages
             if tracks["next"]:
