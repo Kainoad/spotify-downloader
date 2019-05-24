@@ -55,6 +55,8 @@ def match_args():
 
 
 def main():
+    msvcrt.setmode(sys.stdout.fileno(), os.O_BINARY)
+    
     const.args = handle.get_arguments()
 
     internals.filter_path(const.args.folder)
