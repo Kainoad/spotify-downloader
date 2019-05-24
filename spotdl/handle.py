@@ -6,6 +6,7 @@ import yaml
 import argparse
 import mimetypes
 import os
+import sys
 
 import spotdl
 from spotdl import internals
@@ -61,6 +62,7 @@ def get_config(config_file):
             cfg = yaml.safe_load(ymlfile)
     except FileNotFoundError:
         log.info("Writing default configuration to {0}:".format(config_file))
+        sys.stdout.flush()
         with open(config_file, "w") as ymlfile:
             yaml.dump(default_conf, ymlfile, default_flow_style=False)
             cfg = default_conf
@@ -70,10 +72,12 @@ def get_config(config_file):
         ).split("\n"):
             if line.strip():
                 log.info(line.strip())
+                sys.stdout.flush()
         log.info(
             "Please note that command line arguments have higher priority "
             "than their equivalents in the configuration file"
         )
+        sys.stdout.flush()
 
     return cfg["spotify-downloader"]
 
