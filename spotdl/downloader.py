@@ -175,8 +175,8 @@ class Downloader:
                 'Refining songname from "{0}" to "{1}"'.format(
                     songname, refined_songname
                 )
-            sys.stdout.flush()
             )
+            sys.stdout.flush()
             if not refined_songname == " - ":
                 songname = refined_songname
         else:
