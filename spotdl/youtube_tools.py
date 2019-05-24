@@ -5,6 +5,7 @@ import pafy
 from slugify import slugify
 from logzero import logger as log
 import os
+import sys
 
 from spotdl import spotify_tools
 from spotdl import internals
@@ -58,14 +59,17 @@ def match_video_and_metadata(track):
         if meta_tags is None:
             if const.args.no_fallback_metadata:
                 log.warning(skip_fallback_metadata_warning)
+                sys.stdout.flush()
             else:
                 log.info(fallback_metadata_info)
+                sys.stdout.flush()
                 meta_tags = generate_metadata(content)
         return meta_tags
 
 
     if internals.is_youtube(track):
         log.debug("Input song is a YouTube URL")
+        sys.stdout.flush()
         content = go_pafy(track, meta_tags=None)
         track = slugify(content.title).replace("-", " ")
         if not const.args.no_metadata:
@@ -74,6 +78,7 @@ def match_video_and_metadata(track):
 
     elif internals.is_spotify(track):
         log.debug("Input song is a Spotify URL")
+        sys.stdout.flush()
         # Let it generate metadata, YouTube doesn't know Spotify slang
         meta_tags = spotify_tools.generate_metadata(track)
         content = go_pafy(track, meta_tags)
@@ -82,6 +87,7 @@ def match_video_and_metadata(track):
 
     else:
         log.debug("Input song is plain text based")
+        sys.stdout.flush()
         if const.args.no_metadata:
             content = go_pafy(track, meta_tags=None)
         else:
@@ -131,6 +137,7 @@ def generate_m3u(track_file):
     target_file = "{}.m3u".format(track_file.split(".")[0])
     total_tracks = len(tracks)
     log.info("Generating {0} from {1} YouTube URLs".format(target_file, total_tracks))
+    sys.stdout.flush()
     with open(target_file, "w") as output_file:
         output_file.write("#EXTM3U\n\n")
 
@@ -139,19 +146,23 @@ def generate_m3u(track_file):
         content, _ = match_video_and_metadata(track)
         if content is None:
             log.warning("Skipping {}".format(track))
+            sys.stdout.flush()
         else:
             log.info(
                 "Matched track {0}/{1} ({2})".format(
                     n, total_tracks, content.watchv_url
                 )
             )
+            sys.stdout.flush()
             log.debug(track)
+            sys.stdout.flush()
             m3u_key = "#EXTINF:{duration},{title}\n{youtube_url}\n".format(
                 duration=internals.get_sec(content.duration),
                 title=content.title,
                 youtube_url=content.watchv_url,
             )
             log.debug(m3u_key)
+            sys.stdout.flush()
             with open(target_file, "a") as output_file:
                 output_file.write(m3u_key)
             videos.append(content.watchv_url)
@@ -166,16 +177,20 @@ def download_song(file_name, content):
         link = content.getbestaudio(preftype=extension[1:])
     else:
         log.debug("No audio streams available for {} type".format(extension))
+        sys.stdout.flush()
         return False
 
     if link:
         log.debug("Downloading from URL: " + link.url)
+        sys.stdout.flush()
         filepath = os.path.join(const.args.folder, file_name)
         log.debug("Saving to: " + filepath)
+        sys.stdout.flush()
         link.download(filepath=filepath)
         return True
     else:
         log.debug("No audio streams available")
+        sys.stdout.flush()
         return False
 
 
@@ -237,7 +252,9 @@ class GenerateYouTubeURL:
         """ Select the best matching video from a list of videos. """
         if const.args.manual:
             log.info(self.raw_song)
+            sys.stdout.flush()
             log.info("0. Skip downloading this song.\n")
+            sys.stdout.flush()
             # fetch all video links on first page on YouTube
             for i, v in enumerate(videos):
                 log.info(
@@ -260,6 +277,7 @@ class GenerateYouTubeURL:
                 log.debug(
                     "Since no metadata found on Spotify, going with the first result"
                 )
+                sys.stdout.flush()
             else:
                 # filter out videos that do not have a similar length to the Spotify song
                 duration_tolerance = 10
@@ -285,6 +303,7 @@ class GenerateYouTubeURL:
                                 self.meta_tags["artists"][0]["name"],
                             )
                         )
+                        sys.stdout.flush()
                         return None
 
                 result = possible_videos_by_duration[0]
@@ -302,10 +321,12 @@ class GenerateYouTubeURL:
         # prevents an infinite loop but allows for a few retries
         if tries_remaining == 0:
             log.debug("No tries left. I quit.")
+            sys.stdout.flush()
             return
 
         search_url = generate_search_url(self.search_query)
         log.debug("Opening URL: {0}".format(search_url))
+        sys.stdout.flush()
 
         item = self._fetch_response(search_url).read()
         items_parse = BeautifulSoup(item, "html.parser")
@@ -326,6 +347,7 @@ class GenerateYouTubeURL:
                 videotime = x.find("span", class_="video-time").get_text()
             except AttributeError:
                 log.debug("Could not find video duration on YouTube, retrying..")
+                sys.stdout.flush()
                 return self.scrape(
                     bestmatch=bestmatch, tries_remaining=tries_remaining - 1
                 )
@@ -357,6 +379,7 @@ class GenerateYouTubeURL:
         else:
             query["q"] = self.search_query
         log.debug("query: {0}".format(query))
+        sys.stdout.flush()
 
         data = pafy.call_gdata("search", query)
         data["items"] = list(
@@ -368,6 +391,7 @@ class GenerateYouTubeURL:
             "id": ",".join(i["id"]["videoId"] for i in data["items"]),
         }
         log.debug("query_results: {0}".format(query_results))
+        sys.stdout.flush()
 
         vdata = pafy.call_gdata("videos", query_results)
 
